@@ -4,8 +4,8 @@ workload=edu.usc.bg.workloads.CoreWorkload
 # Fields for populating the user table.
 usercount=10
 useroffset=0
-resourcecountperuser=10
-friendcountperuser=8
+resourcecountperuser=55
+friendcountperuser=2
 confperc=1
 
 userworkload=edu.usc.bg.workloads.UserWorkload

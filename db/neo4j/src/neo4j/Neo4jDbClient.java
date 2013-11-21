@@ -7,6 +7,7 @@ import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.schema.IndexDefinition;
 import org.neo4j.graphdb.schema.Schema;
+import org.neo4j.tooling.GlobalGraphOperations;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -38,10 +39,10 @@ public class Neo4jDbClient extends DB {
 
     @Override
     public int insertEntity(String entitySet, String entityPK, HashMap<String, ByteIterator> values, boolean insertImage) {
-        System.out.println("Inside of Insert Entity");
+        //System.out.println("Inside of Insert Entity");
         Label userLabel = DynamicLabel.label("user");
         if (entitySet.equals("users")) {
-            System.out.println("Inserting user");
+            //System.out.println("Inserting user");
             Node myTempNode;
             Transaction tx = graphDb.beginTx();
             myTempNode = graphDb.createNode();
@@ -59,7 +60,7 @@ public class Neo4jDbClient extends DB {
 
         }
         if (entitySet.equals("resources")) {
-            System.out.println("Adding resources..");
+           // System.out.println("Adding resources..");
             Node myTempResourceNode;
             Transaction tx = graphDb.beginTx();
             myTempResourceNode = graphDb.createNode();
@@ -81,7 +82,7 @@ public class Neo4jDbClient extends DB {
 
                     for (Node node : userNodes)
                     {
-                        System.out.println("hey there is some node which has a relation");
+                        //System.out.println("hey there is some node which has a relation");
                         node.createRelationshipTo(myTempResourceNode,RelTypes.OWNS);
                     }
                 }
@@ -165,7 +166,23 @@ public class Neo4jDbClient extends DB {
     @Override
     public HashMap<String, String> getInitialStats() {
         HashMap<String, String> stats = new HashMap<String, String>();
-        stats.put("usercount", "0");
+        Iterator<Node> iter;
+        Transaction tx = graphDb.beginTx();
+        int usercount = 0;
+        try {
+            GlobalGraphOperations gObj = GlobalGraphOperations.at(graphDb);
+            iter = gObj.getAllNodesWithLabel(DynamicLabel.label("user")).iterator();
+            while (iter.hasNext())  {
+                iter.next();
+                usercount++;
+            }
+            tx.success();
+        }
+        finally {
+            tx.close();
+        }
+        //System.out.println("User count is: " + usercount);
+        stats.put("usercount", usercount + "");
         stats.put("avgfriendsperuser", "0");
         stats.put("avgpendingperuser", "0");
         stats.put("resourcesperuser", "0");
