@@ -169,11 +169,19 @@ public class Neo4jDbClient extends DB {
         Iterator<Node> iter;
         Transaction tx = graphDb.beginTx();
         int usercount = 0;
+        int friendcount = 0;
         try {
             GlobalGraphOperations gObj = GlobalGraphOperations.at(graphDb);
             iter = gObj.getAllNodesWithLabel(DynamicLabel.label("user")).iterator();
             while (iter.hasNext())  {
-                iter.next();
+                Node n = iter.next();
+                System.out.println(n.getProperty("username"));
+                Iterator<Relationship> iterRel;
+                iterRel = n.getRelationships(RelTypes.FRIEND).iterator();
+                while (iterRel.hasNext()) {
+                    friendcount++;
+                    iterRel.next();
+                }
                 usercount++;
             }
             tx.success();
@@ -183,7 +191,7 @@ public class Neo4jDbClient extends DB {
         }
         //System.out.println("User count is: " + usercount);
         stats.put("usercount", usercount + "");
-        stats.put("avgfriendsperuser", "0");
+        stats.put("avgfriendsperuser", (friendcount/usercount) + "");
         stats.put("avgpendingperuser", "0");
         stats.put("resourcesperuser", "0");
         return stats;
