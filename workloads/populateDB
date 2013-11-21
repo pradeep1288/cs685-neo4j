@@ -1,0 +1,17 @@
+# This is the workload for the user table.
+workload=edu.usc.bg.workloads.CoreWorkload
+
+# Fields for populating the user table.
+usercount=10
+useroffset=0
+resourcecountperuser=10
+friendcountperuser=8
+confperc=1
+
+userworkload=edu.usc.bg.workloads.UserWorkload
+friendshipworkload=edu.usc.bg.workloads.FriendshipWorkload
+resourceworkload=edu.usc.bg.workloads.ResourceWorkload
+
+
+requestdistribution=dzipfian
+zipfianmean=0.27
