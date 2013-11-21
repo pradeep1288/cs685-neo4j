@@ -166,15 +166,15 @@ public class Neo4jDbClient extends DB {
     @Override
     public HashMap<String, String> getInitialStats() {
         HashMap<String, String> stats = new HashMap<String, String>();
-        Iterator<Node> iter;
+        Iterator<Node> iterUser;
         Transaction tx = graphDb.beginTx();
         int usercount = 0;
         int friendcount = 0;
         try {
             GlobalGraphOperations gObj = GlobalGraphOperations.at(graphDb);
-            iter = gObj.getAllNodesWithLabel(DynamicLabel.label("user")).iterator();
-            while (iter.hasNext())  {
-                Node n = iter.next();
+            iterUser = gObj.getAllNodesWithLabel(DynamicLabel.label("user")).iterator();
+            while (iterUser.hasNext())  {
+                Node n = iterUser.next();
                 System.out.println(n.getProperty("username"));
                 Iterator<Relationship> iterRel;
                 iterRel = n.getRelationships(RelTypes.FRIEND).iterator();
