@@ -5,7 +5,7 @@ workload=edu.usc.bg.workloads.CoreWorkload
 usercount=10
 useroffset=0
 resourcecountperuser=2
-friendcountperuser=3
+friendcountperuser=4
 confperc=1
 
 userworkload=edu.usc.bg.workloads.UserWorkload

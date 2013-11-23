@@ -3,6 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="2dceb8f8-775c-4600-937f-4a2abf3d9925" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/db/neo4j/src/neo4j/Neo4jDbClient.java" afterPath="$PROJECT_DIR$/db/neo4j/src/neo4j/Neo4jDbClient.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/workloads/populateDB" afterPath="$PROJECT_DIR$/workloads/populateDB" />
     </list>
     <ignored path="BGv0.1.4776.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -116,14 +117,14 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="Neo4jDbClient.java" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="Neo4jDbClient.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/db/neo4j/src/neo4j/Neo4jDbClient.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="247" column="68" selection-start="10625" selection-end="10625" vertical-scroll-proportion="0.6626298">
+            <state line="245" column="53" selection-start="10467" selection-end="10467" vertical-scroll-proportion="0.0">
               <folding>
                 <element signature="e#6774#6796#0" expanded="true" />
-                <element signature="e#11551#11557#0" expanded="true" />
-                <element signature="e#12136#12142#0" expanded="true" />
+                <element signature="e#11553#11559#0" expanded="true" />
+                <element signature="e#12138#12144#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -165,10 +166,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="populateDB" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="populateDB" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/workloads/populateDB">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="7" column="20" selection-start="196" selection-end="196" vertical-scroll-proportion="0.0">
+            <state line="7" column="20" selection-start="196" selection-end="196" vertical-scroll-proportion="0.17766498">
               <folding />
             </state>
           </provider>
@@ -213,8 +214,8 @@
         <option value="$PROJECT_DIR$/build.xml" />
         <option value="$PROJECT_DIR$/workloads/inviteAccept" />
         <option value="$PROJECT_DIR$/Makefile" />
-        <option value="$PROJECT_DIR$/workloads/populateDB" />
         <option value="$PROJECT_DIR$/db/neo4j/src/neo4j/Neo4jDbClient.java" />
+        <option value="$PROJECT_DIR$/workloads/populateDB" />
       </list>
     </option>
   </component>
@@ -736,13 +737,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/workloads/populateDB">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="7" column="20" selection-start="196" selection-end="196" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="jar://$PROJECT_DIR$/db/neo4j/lib/neo4j-kernel-2.0.0-RC1.jar!/org/neo4j/graphdb/Transaction.class">
       <provider selected="true" editor-type-id="text-editor">
         <state line="15" column="9" selection-start="322" selection-end="322" vertical-scroll-proportion="0.3975265">
@@ -759,12 +753,19 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/db/neo4j/src/neo4j/Neo4jDbClient.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="247" column="68" selection-start="10625" selection-end="10625" vertical-scroll-proportion="0.6626298">
+        <state line="245" column="53" selection-start="10467" selection-end="10467" vertical-scroll-proportion="0.0">
           <folding>
             <element signature="e#6774#6796#0" expanded="true" />
-            <element signature="e#11551#11557#0" expanded="true" />
-            <element signature="e#12136#12142#0" expanded="true" />
+            <element signature="e#11553#11559#0" expanded="true" />
+            <element signature="e#12138#12144#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/workloads/populateDB">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="7" column="20" selection-start="196" selection-end="196" vertical-scroll-proportion="0.17766498">
+          <folding />
         </state>
       </provider>
     </entry>

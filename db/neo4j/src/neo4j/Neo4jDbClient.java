@@ -232,9 +232,9 @@ public class Neo4jDbClient extends DB {
             while (iterUser.hasNext()) {
                 Node n = iterUser.next();
                 //System.out.println(n.getProperty("username"));
-                friendcount = getRelationshipCount(n,RelTypes.FRIEND,null);
-                pendingFriends = getRelationshipCount(n, RelTypes.PENDING_FRIEND, Direction.INCOMING);
-                noOfResources = getRelationshipCount(n, RelTypes.OWNS, Direction.OUTGOING);
+                friendcount += getRelationshipCount(n,RelTypes.FRIEND,null);
+                pendingFriends += getRelationshipCount(n, RelTypes.PENDING_FRIEND, Direction.INCOMING);
+                noOfResources += getRelationshipCount(n, RelTypes.OWNS, Direction.OUTGOING);
                 usercount++;
             }
             tx.success();
@@ -243,7 +243,7 @@ public class Neo4jDbClient extends DB {
         }
         //System.out.println("User count is: " + usercount);
         stats.put("usercount", usercount + "");
-        stats.put("avgfriendsperuser", (friendcount / usercount) + "");
+        stats.put("avgfriendsperuser", (friendcount /usercount )+ "");
         stats.put("avgpendingperuser", (pendingFriends/ usercount) + "");
         stats.put("resourcesperuser", (noOfResources/usercount) + "");
         return stats;
