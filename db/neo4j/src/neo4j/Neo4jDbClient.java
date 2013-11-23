@@ -142,13 +142,7 @@ public class Neo4jDbClient extends DB {
     public int listFriends(int requesterID, int profileOwnerID, Set<String> fields, Vector<HashMap<String, ByteIterator>> result, boolean insertImage, boolean testMode) {
         Transaction tx = graphDb.beginTx();
         try {
-            Node myTempNode = findNodeByUserid(profileOwnerID + "");
-            for (Relationship rel : myTempNode.getRelationships(RelTypes.FRIEND)) {
-                Node friend = rel.getOtherNode(myTempNode);
-                HashMap<String, ByteIterator> friendProperties = new HashMap<String, ByteIterator>();
-                addPropertiesToMap(friendProperties, friend);
-                result.add(friendProperties);
-            }
+            listFriendProperties(profileOwnerID, result, RelTypes.FRIEND, null);
             tx.success();
         }
         finally {
@@ -157,8 +151,22 @@ public class Neo4jDbClient extends DB {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
+    private void listFriendProperties(int profileOwnerID, Vector<HashMap<String, ByteIterator>> result, RelTypes relType, Direction direction) {
+        Node myTempNode = findNodeByUserid(profileOwnerID + "");
+        Iterable<Relationship> iterator;
+        if(direction==null) iterator = myTempNode.getRelationships(relType);
+        else iterator = myTempNode.getRelationships(relType, direction);
+        for (Relationship rel : iterator) {
+            Node friend = rel.getOtherNode(myTempNode);
+            HashMap<String, ByteIterator> friendProperties = new HashMap<String, ByteIterator>();
+            addPropertiesToMap(friendProperties, friend);
+            result.add(friendProperties);
+        }
+    }
+
     @Override
     public int viewFriendReq(int profileOwnerID, Vector<HashMap<String, ByteIterator>> results, boolean insertImage, boolean testMode) {
+        listFriendProperties(profileOwnerID, results, RelTypes.PENDING_FRIEND, Direction.INCOMING);
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
