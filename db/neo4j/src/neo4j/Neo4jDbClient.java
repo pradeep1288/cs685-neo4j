@@ -269,11 +269,28 @@ public class Neo4jDbClient extends DB {
 
     @Override
     public int queryPendingFriendshipIds(int memberID, Vector<Integer> pendingIds) {
+        queryFriendshipIDs(memberID, pendingIds, RelTypes.PENDING_FRIEND);
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    private void queryFriendshipIDs(int memberid, Vector<Integer> ids, RelTypes type) {
+        Transaction tx = graphDb.beginTx();
+        try {
+            Node myTempNode = findNodeByUserid(memberid + "");
+            Iterable<Relationship> relationships = myTempNode.getRelationships(type, Direction.INCOMING);
+            for(Relationship r : relationships){
+                ids.add(Integer.parseInt(r.getOtherNode(myTempNode).getProperty("userid").toString()));
+            }
+            tx.success();
+        }
+        finally {
+            tx.close();
+        }
     }
 
     @Override
     public int queryConfirmedFriendshipIds(int memberID, Vector<Integer> confirmedIds) {
+        queryFriendshipIDs(memberID,confirmedIds,RelTypes.FRIEND);
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 }
