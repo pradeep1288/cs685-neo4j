@@ -224,18 +224,17 @@ public class Neo4jDbClient extends DB {
         Transaction tx = graphDb.beginTx();
         int usercount = 0;
         int friendcount = 0;
+        int pendingFriends = 0;
+        int noOfResources = 0;
         try {
             GlobalGraphOperations gObj = GlobalGraphOperations.at(graphDb);
             iterUser = gObj.getAllNodesWithLabel(DynamicLabel.label("user")).iterator();
             while (iterUser.hasNext()) {
                 Node n = iterUser.next();
                 //System.out.println(n.getProperty("username"));
-                Iterator<Relationship> iterRel;
-                iterRel = n.getRelationships(RelTypes.FRIEND).iterator();
-                while (iterRel.hasNext()) {
-                    friendcount++;
-                    iterRel.next();
-                }
+                friendcount = getRelationshipCount(n,RelTypes.FRIEND,null);
+                pendingFriends = getRelationshipCount(n, RelTypes.PENDING_FRIEND, Direction.INCOMING);
+                noOfResources = getRelationshipCount(n, RelTypes.OWNS, Direction.OUTGOING);
                 usercount++;
             }
             tx.success();
@@ -245,9 +244,23 @@ public class Neo4jDbClient extends DB {
         //System.out.println("User count is: " + usercount);
         stats.put("usercount", usercount + "");
         stats.put("avgfriendsperuser", (friendcount / usercount) + "");
-        stats.put("avgpendingperuser", "0");
-        stats.put("resourcesperuser", "0");
+        stats.put("avgpendingperuser", (pendingFriends/ usercount) + "");
+        stats.put("resourcesperuser", (noOfResources/usercount) + "");
         return stats;
+    }
+
+    private int getRelationshipCount(Node n, RelTypes type, Direction direction) {
+        int count = 0 ;
+        Iterator<Relationship> iterFriendRel;
+        if (direction == null)
+            iterFriendRel = n.getRelationships(type).iterator();
+        else
+            iterFriendRel = n.getRelationships(type, direction).iterator();
+        while (iterFriendRel.hasNext()) {
+            count++;
+            iterFriendRel.next();
+        }
+        return count;
     }
 
     @Override
