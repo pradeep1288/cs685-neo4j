@@ -2,6 +2,8 @@ package neo4j;
 
 import edu.usc.bg.base.ByteIterator;
 import edu.usc.bg.base.DB;
+import edu.usc.bg.base.ObjectByteIterator;
+import edu.usc.bg.base.StringByteIterator;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.schema.IndexDefinition;
@@ -59,7 +61,7 @@ public class Neo4jDbClient extends DB {
 
         }
         if (entitySet.equals("resources")) {
-           // System.out.println("Adding resources..");
+            // System.out.println("Adding resources..");
             Node myTempResourceNode;
             Transaction tx = graphDb.beginTx();
             myTempResourceNode = graphDb.createNode();
@@ -79,13 +81,11 @@ public class Neo4jDbClient extends DB {
                         userNodes.add(users.next());
                     }
 
-                    for (Node node : userNodes)
-                    {
+                    for (Node node : userNodes) {
                         //System.out.println("hey there is some node which has a relation");
-                        node.createRelationshipTo(myTempResourceNode,RelTypes.OWNS);
+                        node.createRelationshipTo(myTempResourceNode, RelTypes.OWNS);
                     }
-                }
-                finally {
+                } finally {
 
                 }
 
@@ -104,7 +104,28 @@ public class Neo4jDbClient extends DB {
 
     @Override
     public int viewProfile(int requesterID, int profileOwnerID, HashMap<String, ByteIterator> result, boolean insertImage, boolean testMode) {
+        Node myTempNode = findNodeByUserid(profileOwnerID + "");
+        if (requesterID == profileOwnerID)
+            result.put("pendingcount", new ObjectByteIterator(Integer.toString(countRelationships(myTempNode, RelTypes.PENDING_FRIEND, Direction.INCOMING)).getBytes()));
+        result.put("friendcount", new ObjectByteIterator(Integer.toString(countRelationships(myTempNode, RelTypes.FRIEND, null)).getBytes()));
+        result.put("resourcecount", new ObjectByteIterator(Integer.toString(countRelationships(myTempNode, RelTypes.OWNS, null)).getBytes()));
+        for (String property : myTempNode.getPropertyKeys()) {
+            result.put(property, new StringByteIterator(myTempNode.getProperty(property).toString()));
+        }
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    private int countRelationships(Node myTempNode, RelTypes relType, Direction direction) {
+        int pendingFriendsCount = 0;
+        Iterator<Relationship> pendingFriendsIterator;
+        if (direction != null) pendingFriendsIterator = myTempNode.getRelationships(relType, direction).iterator();
+        else pendingFriendsIterator = myTempNode.getRelationships(relType).iterator();
+        while (pendingFriendsIterator.hasNext()) {
+            pendingFriendsCount++;
+
+            pendingFriendsIterator.next();
+        }
+        return pendingFriendsCount;
     }
 
     @Override
@@ -119,6 +140,7 @@ public class Neo4jDbClient extends DB {
 
     @Override
     public int acceptFriend(int inviterID, int inviteeID) {
+
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
@@ -129,7 +151,7 @@ public class Neo4jDbClient extends DB {
 
     @Override
     public int inviteFriend(int inviterID, int inviteeID) {
-        addRelationship(inviteeID,inviteeID,RelTypes.PENDING_FRIEND);
+        addRelationship(inviteeID, inviteeID, RelTypes.PENDING_FRIEND);
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
@@ -173,7 +195,7 @@ public class Neo4jDbClient extends DB {
         try {
             GlobalGraphOperations gObj = GlobalGraphOperations.at(graphDb);
             iterUser = gObj.getAllNodesWithLabel(DynamicLabel.label("user")).iterator();
-            while (iterUser.hasNext())  {
+            while (iterUser.hasNext()) {
                 Node n = iterUser.next();
                 //System.out.println(n.getProperty("username"));
                 Iterator<Relationship> iterRel;
@@ -185,13 +207,12 @@ public class Neo4jDbClient extends DB {
                 usercount++;
             }
             tx.success();
-        }
-        finally {
+        } finally {
             tx.close();
         }
         //System.out.println("User count is: " + usercount);
         stats.put("usercount", usercount + "");
-        stats.put("avgfriendsperuser", (friendcount/usercount) + "");
+        stats.put("avgfriendsperuser", (friendcount / usercount) + "");
         stats.put("avgpendingperuser", "0");
         stats.put("resourcesperuser", "0");
         return stats;
@@ -217,32 +238,28 @@ public class Neo4jDbClient extends DB {
             myTempNode1.createRelationshipTo(myTempNode2, relType);
             tx.success();
 
-        }
-        finally {
+        } finally {
             tx.close();
         }
     }
 
-    public Node findNodeByUserid(String userid)
-    {
+    public Node findNodeByUserid(String userid) {
         Node myTempNode = null;
         Label userLabel = DynamicLabel.label("user");
         ArrayList<Node> userNodes = new ArrayList<Node>();
         Transaction tx = graphDb.beginTx();
         ResourceIterator<Node> users;
-        try{
+        try {
             users = graphDb.findNodesByLabelAndProperty(userLabel, "userid", userid + "").iterator();
             userNodes = new ArrayList<Node>();
             while (users.hasNext()) {
                 userNodes.add(users.next());
             }
 
-            for (Node node : userNodes)
-            {
+            for (Node node : userNodes) {
                 myTempNode = node;
             }
-        }
-        finally {
+        } finally {
 
         }
         return myTempNode;
@@ -278,19 +295,18 @@ public class Neo4jDbClient extends DB {
         try {
             Node myTempNode = findNodeByUserid(memberid + "");
             Iterable<Relationship> relationships = myTempNode.getRelationships(type, Direction.INCOMING);
-            for(Relationship r : relationships){
+            for (Relationship r : relationships) {
                 ids.add(Integer.parseInt(r.getOtherNode(myTempNode).getProperty("userid").toString()));
             }
             tx.success();
-        }
-        finally {
+        } finally {
             tx.close();
         }
     }
 
     @Override
     public int queryConfirmedFriendshipIds(int memberID, Vector<Integer> confirmedIds) {
-        queryFriendshipIDs(memberID,confirmedIds,RelTypes.FRIEND);
+        queryFriendshipIDs(memberID, confirmedIds, RelTypes.FRIEND);
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 }
