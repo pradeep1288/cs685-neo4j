@@ -123,6 +123,9 @@ testdb: recompile
 createAndLoad0: recompile
 	java -Xmx4096M -cp "build/bg.jar:db/neo4j/lib/*" edu.usc.bg.BGMainClass onetime -load -db neo4j.Neo4jDbClient -P workloads/populateDB -p insertimage=false -p threadcount=1
 
+inviteAccept: recompile
+	java -Xmx4096M -cp "build/bg.jar:db/neo4j/lib/*" edu.usc.bg.BGMainClass onetime -db neo4j.Neo4jDbClient -P workloads/inviteAccept -p threadcount=1  -p usercount=1000 -p insertimage=false
+
 
 
 

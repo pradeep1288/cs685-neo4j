@@ -2,7 +2,6 @@ package neo4j;
 
 import edu.usc.bg.base.ByteIterator;
 import edu.usc.bg.base.DB;
-import org.neo4j.cypher.ExecutionEngine;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.schema.IndexDefinition;
@@ -100,7 +99,7 @@ public class Neo4jDbClient extends DB {
     }
 
     private static enum RelTypes implements RelationshipType {
-        FRIEND, OWNS, CREATED
+        FRIEND, OWNS, PENDING_FRIEND, CREATED
     }
 
     @Override
@@ -130,6 +129,7 @@ public class Neo4jDbClient extends DB {
 
     @Override
     public int inviteFriend(int inviterID, int inviteeID) {
+        addRelationship(inviteeID,inviteeID,RelTypes.PENDING_FRIEND);
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
@@ -175,7 +175,7 @@ public class Neo4jDbClient extends DB {
             iterUser = gObj.getAllNodesWithLabel(DynamicLabel.label("user")).iterator();
             while (iterUser.hasNext())  {
                 Node n = iterUser.next();
-                System.out.println(n.getProperty("username"));
+                //System.out.println(n.getProperty("username"));
                 Iterator<Relationship> iterRel;
                 iterRel = n.getRelationships(RelTypes.FRIEND).iterator();
                 while (iterRel.hasNext()) {
@@ -199,6 +199,11 @@ public class Neo4jDbClient extends DB {
 
     @Override
     public int CreateFriendship(int friendid1, int friendid2) {
+        addRelationship(friendid1, friendid2, RelTypes.FRIEND);
+        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    private void addRelationship(int from, int to, RelTypes relType) {
         Label userLabel = DynamicLabel.label("user");
         ArrayList<Node> userNodes = new ArrayList<Node>();
         Transaction tx = graphDb.beginTx();
@@ -206,17 +211,16 @@ public class Neo4jDbClient extends DB {
         Node myTempNode2 = null;
 
         try {
-            myTempNode1 = findNodeByUserid(friendid1 + "");
-            myTempNode2 = findNodeByUserid(friendid2 + "");
+            myTempNode1 = findNodeByUserid(from + "");
+            myTempNode2 = findNodeByUserid(to + "");
 
-            myTempNode1.createRelationshipTo(myTempNode2, RelTypes.FRIEND);
+            myTempNode1.createRelationshipTo(myTempNode2, relType);
             tx.success();
 
         }
         finally {
             tx.close();
         }
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     public Node findNodeByUserid(String userid)
