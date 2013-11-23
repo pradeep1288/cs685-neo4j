@@ -104,15 +104,25 @@ public class Neo4jDbClient extends DB {
 
     @Override
     public int viewProfile(int requesterID, int profileOwnerID, HashMap<String, ByteIterator> result, boolean insertImage, boolean testMode) {
-        Node myTempNode = findNodeByUserid(profileOwnerID + "");
-        if (requesterID == profileOwnerID)
-            result.put("pendingcount", new ObjectByteIterator(Integer.toString(countRelationships(myTempNode, RelTypes.PENDING_FRIEND, Direction.INCOMING)).getBytes()));
-        result.put("friendcount", new ObjectByteIterator(Integer.toString(countRelationships(myTempNode, RelTypes.FRIEND, null)).getBytes()));
-        result.put("resourcecount", new ObjectByteIterator(Integer.toString(countRelationships(myTempNode, RelTypes.OWNS, null)).getBytes()));
+        Transaction tx = graphDb.beginTx();
+        try {
+            Node myTempNode = findNodeByUserid(profileOwnerID + "");
+            if (requesterID == profileOwnerID)
+                result.put("pendingcount", new ObjectByteIterator(Integer.toString(countRelationships(myTempNode, RelTypes.PENDING_FRIEND, Direction.INCOMING)).getBytes()));
+            result.put("friendcount", new ObjectByteIterator(Integer.toString(countRelationships(myTempNode, RelTypes.FRIEND, null)).getBytes()));
+            result.put("resourcecount", new ObjectByteIterator(Integer.toString(countRelationships(myTempNode, RelTypes.OWNS, null)).getBytes()));
+            addPropertiesToMap(result, myTempNode);
+            tx.success();
+        } finally {
+            tx.close();
+        }
+        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    private void addPropertiesToMap(HashMap<String, ByteIterator> result, Node myTempNode) {
         for (String property : myTempNode.getPropertyKeys()) {
             result.put(property, new StringByteIterator(myTempNode.getProperty(property).toString()));
         }
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     private int countRelationships(Node myTempNode, RelTypes relType, Direction direction) {
@@ -130,6 +140,20 @@ public class Neo4jDbClient extends DB {
 
     @Override
     public int listFriends(int requesterID, int profileOwnerID, Set<String> fields, Vector<HashMap<String, ByteIterator>> result, boolean insertImage, boolean testMode) {
+        Transaction tx = graphDb.beginTx();
+        try {
+            Node myTempNode = findNodeByUserid(profileOwnerID + "");
+            for (Relationship rel : myTempNode.getRelationships(RelTypes.FRIEND)) {
+                Node friend = rel.getOtherNode(myTempNode);
+                HashMap<String, ByteIterator> friendProperties = new HashMap<String, ByteIterator>();
+                addPropertiesToMap(friendProperties, friend);
+                result.add(friendProperties);
+            }
+            tx.success();
+        }
+        finally {
+            tx.close();
+        }
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
