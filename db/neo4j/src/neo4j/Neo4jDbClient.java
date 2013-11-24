@@ -183,13 +183,42 @@ public class Neo4jDbClient extends DB {
 
     @Override
     public int acceptFriend(int inviterID, int inviteeID) {
+        Transaction tx = graphDb.beginTx();
+        try {
 
+            deleteRelationship(inviterID, inviterID);
+            Node inviter = graphDb.getNodeById(inviterID);
+            Node invitee = graphDb.getNodeById(inviteeID);
+            inviter.createRelationshipTo(invitee, RelTypes.FRIEND);
+            tx.success();
+        } finally {
+            tx.close();
+        }
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    private void deleteRelationship(int inviterID, int inviteeID) {
+        Node inviter = graphDb.getNodeById(inviterID);
+        Node invitee = graphDb.getNodeById(inviteeID);
+        for (Relationship n : invitee.getRelationships(RelTypes.PENDING_FRIEND, Direction.INCOMING)) {
+            if (n.getOtherNode(invitee) == inviter) {
+                //delete the pending relationship
+                n.getOtherNode(invitee).delete();
+                //create the relationship as friend
+
+            }
+        }
     }
 
     @Override
     public int rejectFriend(int inviterID, int inviteeID) {
-
+        Transaction tx = graphDb.beginTx();
+        try {
+            deleteRelationship(inviterID, inviteeID);
+            tx.success();
+        } finally {
+            tx.close();
+        }
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
@@ -304,7 +333,13 @@ public class Neo4jDbClient extends DB {
 
     @Override
     public int CreateFriendship(int friendid1, int friendid2) {
-        addRelationship(friendid1, friendid2, RelTypes.FRIEND);
+        Transaction tx = graphDb.beginTx();
+        try {
+            addRelationship(friendid1, friendid2, RelTypes.FRIEND);
+            tx.success();
+        } finally {
+            tx.close();
+        }
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
@@ -314,10 +349,7 @@ public class Neo4jDbClient extends DB {
         Transaction tx = graphDb.beginTx();
         Node myTempNode1 = null;
         Node myTempNode2 = null;
-
         try {
-            //myTempNode1 = findNodeByUserid(from + "");
-            //myTempNode2 = findNodeByUserid(to + "");
             myTempNode1 = graphDb.getNodeById(from);
             myTempNode2 = graphDb.getNodeById(to);
             myTempNode1.createRelationshipTo(myTempNode2, relType);
@@ -372,12 +404,17 @@ public class Neo4jDbClient extends DB {
 
     @Override
     public int queryPendingFriendshipIds(int memberID, Vector<Integer> pendingIds) {
-        queryFriendshipIDs(memberID, pendingIds, RelTypes.PENDING_FRIEND, Direction.INCOMING);
+        Transaction tx = graphDb.beginTx();
+        try {
+            queryFriendshipIDs(memberID, pendingIds, RelTypes.PENDING_FRIEND, Direction.INCOMING);
+            tx.success();
+        } finally {
+            tx.close();
+        }
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     private void queryFriendshipIDs(int memberid, Vector<Integer> ids, RelTypes type, Direction direction) {
-        Transaction tx = graphDb.beginTx();
         try {
             Node myTempNode = graphDb.getNodeById(memberid);
             Iterable<Relationship> relationships;
@@ -386,15 +423,19 @@ public class Neo4jDbClient extends DB {
             for (Relationship r : relationships) {
                 ids.add(Integer.parseInt(r.getOtherNode(myTempNode).getProperty("userid").toString()));
             }
-            tx.success();
         } finally {
-            tx.close();
         }
     }
 
     @Override
     public int queryConfirmedFriendshipIds(int memberID, Vector<Integer> confirmedIds) {
-        queryFriendshipIDs(memberID, confirmedIds, RelTypes.FRIEND, null);
+        Transaction tx = graphDb.beginTx();
+        try {
+            queryFriendshipIDs(memberID, confirmedIds, RelTypes.FRIEND, null);
+            tx.success();
+        } finally {
+            tx.close();
+        }
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 }
