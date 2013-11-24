@@ -74,20 +74,13 @@ public class Neo4jDbClient extends DB {
 
 
                 String wallUserId = values.get("walluserid").toString();
-                myTempResourceNode.setProperty("walluserid", wallUserId);
+                String createrUserId = values.get("creatorid").toString();
+                //myTempResourceNode.setProperty("walluserid", wallUserId);
                 myTempResourceNode.setProperty("rid", entityPK);
 
                 try {
-                    ResourceIterator<Node> users = graphDb.findNodesByLabelAndProperty(userLabel, "userid", wallUserId).iterator();
-                    ArrayList<Node> userNodes = new ArrayList<Node>();
-                    while (users.hasNext()) {
-                        userNodes.add(users.next());
-                    }
-
-                    for (Node node : userNodes) {
-                        //System.out.println("hey there is some node which has a relation");
-                        node.createRelationshipTo(myTempResourceNode, RelTypes.OWNS);
-                    }
+                    createResourceRelation(userLabel, myTempResourceNode, wallUserId, RelTypes.OWNS);
+                    createResourceRelation(userLabel, myTempResourceNode, createrUserId, RelTypes.CREATED);
                 } finally {
 
                 }
@@ -99,6 +92,19 @@ public class Neo4jDbClient extends DB {
 
         }
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    private void createResourceRelation(Label userLabel, Node myTempResourceNode, String userid, RelTypes rel) {
+        ResourceIterator<Node> users = graphDb.findNodesByLabelAndProperty(userLabel, "userid", userid).iterator();
+        ArrayList<Node> userNodes = new ArrayList<Node>();
+        while (users.hasNext()) {
+            userNodes.add(users.next());
+        }
+
+        for (Node node : userNodes) {
+            //System.out.println("hey there is some node which has a relation");
+            node.createRelationshipTo(myTempResourceNode, rel);
+        }
     }
 
     private static enum RelTypes implements RelationshipType {
