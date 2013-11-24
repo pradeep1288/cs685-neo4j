@@ -109,7 +109,7 @@ public class Neo4jDbClient extends DB {
     public int viewProfile(int requesterID, int profileOwnerID, HashMap<String, ByteIterator> result, boolean insertImage, boolean testMode) {
         Transaction tx = graphDb.beginTx();
         try {
-            Node myTempNode = graphDb.getNodeById(profileOwnerID);
+            Node myTempNode = findNodeByUserid(profileOwnerID + "");
             if (requesterID == profileOwnerID)
                 result.put("pendingcount", new ObjectByteIterator(Integer.toString(countRelationships(myTempNode, RelTypes.PENDING_FRIEND, Direction.INCOMING)).getBytes()));
             result.put("friendcount", new ObjectByteIterator(Integer.toString(countRelationships(myTempNode, RelTypes.FRIEND, null)).getBytes()));
@@ -154,7 +154,7 @@ public class Neo4jDbClient extends DB {
     }
 
     private void listRelatedNodeProperties(int profileOwnerID, Vector<HashMap<String, ByteIterator>> result, RelTypes relType, Direction direction, int limit) {
-        Node myTempNode = graphDb.getNodeById(profileOwnerID);
+        Node myTempNode = findNodeByUserid(profileOwnerID + "");
         Iterable<Relationship> iterator;
         if (direction == null) iterator = myTempNode.getRelationships(relType);
         else iterator = myTempNode.getRelationships(relType, direction);
@@ -187,8 +187,8 @@ public class Neo4jDbClient extends DB {
         try {
 
             deleteRelationship(inviterID, inviterID);
-            Node inviter = graphDb.getNodeById(inviterID);
-            Node invitee = graphDb.getNodeById(inviteeID);
+            Node inviter = findNodeByUserid(inviterID + "");
+            Node invitee = findNodeByUserid(inviteeID+  "");
             inviter.createRelationshipTo(invitee, RelTypes.FRIEND);
             tx.success();
         } finally {
@@ -198,8 +198,8 @@ public class Neo4jDbClient extends DB {
     }
 
     private void deleteRelationship(int inviterID, int inviteeID) {
-        Node inviter = graphDb.getNodeById(inviterID);
-        Node invitee = graphDb.getNodeById(inviteeID);
+        Node inviter = findNodeByUserid(inviterID + "");
+        Node invitee = findNodeByUserid(inviteeID + "");
         for (Relationship n : invitee.getRelationships(RelTypes.PENDING_FRIEND, Direction.INCOMING)) {
             if (n.getOtherNode(invitee) == inviter) {
                 //delete the pending relationship
@@ -271,8 +271,8 @@ public class Neo4jDbClient extends DB {
         //First get the Node
         Transaction tx = graphDb.beginTx();
         try {
-            Node friend1 = graphDb.getNodeById(friendid1);
-            Node friend2 = graphDb.getNodeById(friendid2);
+            Node friend1 = findNodeByUserid(friendid1 + "");
+            Node friend2 = findNodeByUserid(friendid2 + "");
             for (Relationship n : friend1.getRelationships(RelTypes.FRIEND)) {
                 if (n.getOtherNode(friend1) == friend2) {
                     n.getOtherNode(friend1).delete();
@@ -350,8 +350,8 @@ public class Neo4jDbClient extends DB {
         Node myTempNode1 = null;
         Node myTempNode2 = null;
         try {
-            myTempNode1 = graphDb.getNodeById(from);
-            myTempNode2 = graphDb.getNodeById(to);
+            myTempNode1 = findNodeByUserid(from + "");
+            myTempNode2 = findNodeByUserid(to + "");
             myTempNode1.createRelationshipTo(myTempNode2, relType);
             tx.success();
 
@@ -360,7 +360,6 @@ public class Neo4jDbClient extends DB {
         }
     }
 
-    @Deprecated
     public Node findNodeByUserid(String userid) {
         Node myTempNode = null;
         Label userLabel = DynamicLabel.label("user");
@@ -416,7 +415,7 @@ public class Neo4jDbClient extends DB {
 
     private void queryFriendshipIDs(int memberid, Vector<Integer> ids, RelTypes type, Direction direction) {
         try {
-            Node myTempNode = graphDb.getNodeById(memberid);
+            Node myTempNode = findNodeByUserid(memberid + "");
             Iterable<Relationship> relationships;
             if (direction != null) relationships = myTempNode.getRelationships(type, direction);
             else relationships = myTempNode.getRelationships(type);
