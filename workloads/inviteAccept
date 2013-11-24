@@ -13,10 +13,10 @@ ThawFrdshipSession=0
 
 
 #user actions
-ViewProfileAction=1
+ViewProfileAction=0.9
 ListFriendsAction=0
 ViewFriendReqAction=0
-InviteFriendAction=0
+InviteFriendAction=0.1
 AcceptFriendReqAction=0
 RejectFriendReqAction=0
 ThawFriendshipAction=0

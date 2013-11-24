@@ -74,6 +74,9 @@ public class Neo4jDbClient extends DB {
 
 
                 String wallUserId = values.get("walluserid").toString();
+                myTempResourceNode.setProperty("walluserid", wallUserId);
+                myTempResourceNode.setProperty("rid", entityPK);
+
                 try {
                     ResourceIterator<Node> users = graphDb.findNodesByLabelAndProperty(userLabel, "userid", wallUserId).iterator();
                     ArrayList<Node> userNodes = new ArrayList<Node>();
@@ -142,31 +145,33 @@ public class Neo4jDbClient extends DB {
     public int listFriends(int requesterID, int profileOwnerID, Set<String> fields, Vector<HashMap<String, ByteIterator>> result, boolean insertImage, boolean testMode) {
         Transaction tx = graphDb.beginTx();
         try {
-            listFriendProperties(profileOwnerID, result, RelTypes.FRIEND, null);
+            listRelatedNodeProperties(profileOwnerID, result, RelTypes.FRIEND, null, -1);
             tx.success();
-        }
-        finally {
+        } finally {
             tx.close();
         }
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
-    private void listFriendProperties(int profileOwnerID, Vector<HashMap<String, ByteIterator>> result, RelTypes relType, Direction direction) {
+    private void listRelatedNodeProperties(int profileOwnerID, Vector<HashMap<String, ByteIterator>> result, RelTypes relType, Direction direction, int limit) {
         Node myTempNode = findNodeByUserid(profileOwnerID + "");
         Iterable<Relationship> iterator;
-        if(direction==null) iterator = myTempNode.getRelationships(relType);
+        if (direction == null) iterator = myTempNode.getRelationships(relType);
         else iterator = myTempNode.getRelationships(relType, direction);
+        int totalSoFar = 0;
         for (Relationship rel : iterator) {
-            Node friend = rel.getOtherNode(myTempNode);
-            HashMap<String, ByteIterator> friendProperties = new HashMap<String, ByteIterator>();
-            addPropertiesToMap(friendProperties, friend);
-            result.add(friendProperties);
+            Node relatedNode = rel.getOtherNode(myTempNode);
+            HashMap<String, ByteIterator> relatedNodeProperties = new HashMap<String, ByteIterator>();
+            addPropertiesToMap(relatedNodeProperties, relatedNode);
+            result.add(relatedNodeProperties);
+            totalSoFar++;
+            if (totalSoFar > limit) break;
         }
     }
 
     @Override
     public int viewFriendReq(int profileOwnerID, Vector<HashMap<String, ByteIterator>> results, boolean insertImage, boolean testMode) {
-        listFriendProperties(profileOwnerID, results, RelTypes.PENDING_FRIEND, Direction.INCOMING);
+        listRelatedNodeProperties(profileOwnerID, results, RelTypes.PENDING_FRIEND, Direction.INCOMING, profileOwnerID);
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
@@ -189,6 +194,7 @@ public class Neo4jDbClient extends DB {
 
     @Override
     public int viewTopKResources(int requesterID, int profileOwnerID, int k, Vector<HashMap<String, ByteIterator>> result) {
+        listRelatedNodeProperties(profileOwnerID, result, RelTypes.OWNS, Direction.OUTGOING, k);
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
@@ -232,7 +238,7 @@ public class Neo4jDbClient extends DB {
             while (iterUser.hasNext()) {
                 Node n = iterUser.next();
                 //System.out.println(n.getProperty("username"));
-                friendcount += getRelationshipCount(n,RelTypes.FRIEND,null);
+                friendcount += getRelationshipCount(n, RelTypes.FRIEND, null);
                 pendingFriends += getRelationshipCount(n, RelTypes.PENDING_FRIEND, Direction.INCOMING);
                 noOfResources += getRelationshipCount(n, RelTypes.OWNS, Direction.OUTGOING);
                 usercount++;
@@ -243,14 +249,14 @@ public class Neo4jDbClient extends DB {
         }
         //System.out.println("User count is: " + usercount);
         stats.put("usercount", usercount + "");
-        stats.put("avgfriendsperuser", (friendcount /usercount )+ "");
-        stats.put("avgpendingperuser", (pendingFriends/ usercount) + "");
-        stats.put("resourcesperuser", (noOfResources/usercount) + "");
+        stats.put("avgfriendsperuser", (friendcount / usercount) + "");
+        stats.put("avgpendingperuser", (pendingFriends / usercount) + "");
+        stats.put("resourcesperuser", (noOfResources / usercount) + "");
         return stats;
     }
 
     private int getRelationshipCount(Node n, RelTypes type, Direction direction) {
-        int count = 0 ;
+        int count = 0;
         Iterator<Relationship> iterFriendRel;
         if (direction == null)
             iterFriendRel = n.getRelationships(type).iterator();
@@ -331,15 +337,17 @@ public class Neo4jDbClient extends DB {
 
     @Override
     public int queryPendingFriendshipIds(int memberID, Vector<Integer> pendingIds) {
-        queryFriendshipIDs(memberID, pendingIds, RelTypes.PENDING_FRIEND);
+        queryFriendshipIDs(memberID, pendingIds, RelTypes.PENDING_FRIEND, Direction.INCOMING);
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
-    private void queryFriendshipIDs(int memberid, Vector<Integer> ids, RelTypes type) {
+    private void queryFriendshipIDs(int memberid, Vector<Integer> ids, RelTypes type, Direction direction) {
         Transaction tx = graphDb.beginTx();
         try {
             Node myTempNode = findNodeByUserid(memberid + "");
-            Iterable<Relationship> relationships = myTempNode.getRelationships(type, Direction.INCOMING);
+            Iterable<Relationship> relationships;
+            if(direction!=null) relationships = myTempNode.getRelationships(type, direction);
+            else relationships = myTempNode.getRelationships(type);
             for (Relationship r : relationships) {
                 ids.add(Integer.parseInt(r.getOtherNode(myTempNode).getProperty("userid").toString()));
             }
@@ -351,7 +359,7 @@ public class Neo4jDbClient extends DB {
 
     @Override
     public int queryConfirmedFriendshipIds(int memberID, Vector<Integer> confirmedIds) {
-        queryFriendshipIDs(memberID, confirmedIds, RelTypes.FRIEND);
+        queryFriendshipIDs(memberID, confirmedIds, RelTypes.FRIEND, null);
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 }
