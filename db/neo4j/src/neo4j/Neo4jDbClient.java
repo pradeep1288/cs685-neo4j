@@ -109,7 +109,7 @@ public class Neo4jDbClient extends DB {
     public int viewProfile(int requesterID, int profileOwnerID, HashMap<String, ByteIterator> result, boolean insertImage, boolean testMode) {
         Transaction tx = graphDb.beginTx();
         try {
-            Node myTempNode = findNodeByUserid(profileOwnerID + "");
+            Node myTempNode = graphDb.getNodeById(profileOwnerID);
             if (requesterID == profileOwnerID)
                 result.put("pendingcount", new ObjectByteIterator(Integer.toString(countRelationships(myTempNode, RelTypes.PENDING_FRIEND, Direction.INCOMING)).getBytes()));
             result.put("friendcount", new ObjectByteIterator(Integer.toString(countRelationships(myTempNode, RelTypes.FRIEND, null)).getBytes()));
@@ -154,7 +154,7 @@ public class Neo4jDbClient extends DB {
     }
 
     private void listRelatedNodeProperties(int profileOwnerID, Vector<HashMap<String, ByteIterator>> result, RelTypes relType, Direction direction, int limit) {
-        Node myTempNode = findNodeByUserid(profileOwnerID + "");
+        Node myTempNode = graphDb.getNodeById(profileOwnerID);
         Iterable<Relationship> iterator;
         if (direction == null) iterator = myTempNode.getRelationships(relType);
         else iterator = myTempNode.getRelationships(relType, direction);
@@ -171,8 +171,14 @@ public class Neo4jDbClient extends DB {
 
     @Override
     public int viewFriendReq(int profileOwnerID, Vector<HashMap<String, ByteIterator>> results, boolean insertImage, boolean testMode) {
-        listRelatedNodeProperties(profileOwnerID, results, RelTypes.PENDING_FRIEND, Direction.INCOMING, profileOwnerID);
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        Transaction tx = graphDb.beginTx();
+        try {
+            listRelatedNodeProperties(profileOwnerID, results, RelTypes.PENDING_FRIEND, Direction.INCOMING, profileOwnerID);
+            tx.success();
+        } finally {
+            tx.close();
+        }
+        return 0;
     }
 
     @Override
@@ -183,18 +189,31 @@ public class Neo4jDbClient extends DB {
 
     @Override
     public int rejectFriend(int inviterID, int inviteeID) {
+
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public int inviteFriend(int inviterID, int inviteeID) {
-        addRelationship(inviteeID, inviteeID, RelTypes.PENDING_FRIEND);
+        Transaction tx = graphDb.beginTx();
+        try {
+            addRelationship(inviteeID, inviteeID, RelTypes.PENDING_FRIEND);
+            tx.success();
+        } finally {
+            tx.close();
+        }
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public int viewTopKResources(int requesterID, int profileOwnerID, int k, Vector<HashMap<String, ByteIterator>> result) {
-        listRelatedNodeProperties(profileOwnerID, result, RelTypes.OWNS, Direction.OUTGOING, k);
+        Transaction tx = graphDb.beginTx();
+        try {
+            listRelatedNodeProperties(profileOwnerID, result, RelTypes.OWNS, Direction.OUTGOING, k);
+            tx.success();
+        } finally {
+            tx.close();
+        }
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
@@ -220,6 +239,20 @@ public class Neo4jDbClient extends DB {
 
     @Override
     public int thawFriendship(int friendid1, int friendid2) {
+        //First get the Node
+        Transaction tx = graphDb.beginTx();
+        try {
+            Node friend1 = graphDb.getNodeById(friendid1);
+            Node friend2 = graphDb.getNodeById(friendid2);
+            for (Relationship n : friend1.getRelationships(RelTypes.FRIEND)) {
+                if (n.getOtherNode(friend1) == friend2) {
+                    n.getOtherNode(friend1).delete();
+                }
+            }
+            tx.success();
+        } finally {
+            tx.close();
+        }
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
@@ -283,9 +316,10 @@ public class Neo4jDbClient extends DB {
         Node myTempNode2 = null;
 
         try {
-            myTempNode1 = findNodeByUserid(from + "");
-            myTempNode2 = findNodeByUserid(to + "");
-
+            //myTempNode1 = findNodeByUserid(from + "");
+            //myTempNode2 = findNodeByUserid(to + "");
+            myTempNode1 = graphDb.getNodeById(from);
+            myTempNode2 = graphDb.getNodeById(to);
             myTempNode1.createRelationshipTo(myTempNode2, relType);
             tx.success();
 
@@ -294,6 +328,7 @@ public class Neo4jDbClient extends DB {
         }
     }
 
+    @Deprecated
     public Node findNodeByUserid(String userid) {
         Node myTempNode = null;
         Label userLabel = DynamicLabel.label("user");
@@ -344,9 +379,9 @@ public class Neo4jDbClient extends DB {
     private void queryFriendshipIDs(int memberid, Vector<Integer> ids, RelTypes type, Direction direction) {
         Transaction tx = graphDb.beginTx();
         try {
-            Node myTempNode = findNodeByUserid(memberid + "");
+            Node myTempNode = graphDb.getNodeById(memberid);
             Iterable<Relationship> relationships;
-            if(direction!=null) relationships = myTempNode.getRelationships(type, direction);
+            if (direction != null) relationships = myTempNode.getRelationships(type, direction);
             else relationships = myTempNode.getRelationships(type);
             for (Relationship r : relationships) {
                 ids.add(Integer.parseInt(r.getOtherNode(myTempNode).getProperty("userid").toString()));
